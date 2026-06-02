@@ -1,4 +1,5 @@
 import os
+os.environ['TF_USE_LEGACY_KERAS'] = '1'
 from flask import Flask, render_template, request
 from helper import Helper
 from werkzeug.utils import secure_filename
@@ -35,10 +36,6 @@ def upload_files():
                 uploaded_file.save(filepath)
 
         prediction = Helper().tumor_predict(filename, MODEL)
-        try:
-            os.remove(filepath)
-        except:
-            pass
         return render_template('predict.html', prediction = prediction, filename=filename)
     return render_template('predict.html', prediction = prediction)
 

@@ -1,47 +1,441 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Brain Tumor Predict</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-    <link href="../static/css/style.css" rel="stylesheet">
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top shadow-sm bg-body">
-      <div class="container">
-        <a class="navbar-brand" href="/">
-          <h4>BrainTumor-CNN</h4>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link active pe-none" aria-current="page">Home</a>
-            </li>
-            <li class="nav-item">
-              <a type="button" class="nav-link getstarted" href="/predict">Get Started</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BrainTumor-CNN — AI Medical Imaging</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a14;
+      --surface: #14142b;
+      --surface-2: #1c1c3a;
+      --border: #2a2a4a;
+      --accent: #06b6d4;
+      --accent-2: #0ea5e9;
+      --accent-glow: rgba(6,182,212,0.25);
+      --text: #f0f4ff;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 20%, rgba(6,182,212,0.15), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 70%, rgba(14,165,233,0.12), transparent);
+      z-index: -1;
+    }
 
-    <section id="section" class="d-flex align-items-center mt-5">
-      <div class="container position-relative">
-        <div class="row">
-          <div class="col-md-7 ps-5 pt-5">
-            <h2>Brain Tumor Image Classification </h2>
-            <a type="button" class="mt-4 get-started" href="/predict">Get Started</a>
-          </div>
-          <div class="col-md-5 ps-4 text-center ">
-            <img src="{{ url_for('static', filename='img/logo.jpg') }}" alt="error" />
-          </div>
+    /* Navbar */
+    .navbar-modern {
+      background: rgba(10,10,20,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-modern .brand {
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .navbar-modern .brand .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .navbar-modern .nav-link {
+      color: var(--text-muted);
+      margin-left: 24px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .navbar-modern .nav-link:hover { color: var(--text); }
+    .navbar-modern .nav-link.active { color: var(--accent); }
+    .navbar-modern .btn-cta {
+      margin-left: 16px;
+      padding: 8px 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+      transition: transform 0.2s;
+    }
+    .navbar-modern .btn-cta:hover { transform: translateY(-2px); }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    @media (max-width: 768px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      border: 1px solid rgba(6,182,212,0.3);
+    }
+    .hero-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 60px);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent), #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p.lead {
+      color: var(--text-muted);
+      font-size: 17px;
+      line-height: 1.7;
+      margin-bottom: 32px;
+      max-width: 480px;
+    }
+    @media (max-width: 768px) { .hero p.lead { margin-left: auto; margin-right: auto; } }
+
+    .btn-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 30px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 16px;
+      box-shadow: 0 10px 30px var(--accent-glow);
+      transition: all 0.2s;
+    }
+    .btn-hero:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px var(--accent-glow);
+      color: #fff;
+    }
+    .btn-hero-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 16px;
+      padding: 14px 24px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: border-color 0.2s;
+    }
+    .btn-hero-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Hero visual */
+    .hero-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
+    }
+    .brain-card {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      background: linear-gradient(145deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 80px var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .brain-card::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(135deg, var(--accent), transparent 50%, var(--accent-2));
+      border-radius: 24px;
+      z-index: -1;
+      opacity: 0.5;
+    }
+    .brain-icon {
+      font-size: 180px;
+      filter: drop-shadow(0 0 30px var(--accent-glow));
+      animation: float 4s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+    .floating-tag {
+      position: absolute;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+    }
+    .floating-tag .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .tag-1 { top: 30px; right: -10px; }
+    .tag-1 .dot { background: #10b981; }
+    .tag-2 { bottom: 50px; left: -20px; }
+    .tag-2 .dot { background: var(--accent); }
+    .tag-3 { top: 50%; right: -30px; }
+    .tag-3 .dot { background: #a855f7; }
+
+    /* Features */
+    .features {
+      padding: 60px 0 80px;
+    }
+    .features-title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+    .features-title .tag {
+      display: inline-block;
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .features-title h2 {
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+    .feature-icon {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 20px var(--accent-glow);
+    }
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Stats */
+    .stats {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+      text-align: center;
+    }
+    @media (max-width: 600px) { .stats-grid { grid-template-columns: repeat(2,1fr); gap: 20px; } }
+    .stat-num {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar-modern">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a class="brand" href="/">
+        <span class="logo">🧠</span>
+        <span>BrainTumor-CNN</span>
+      </a>
+      <div class="d-flex align-items-center">
+        <a href="/" class="nav-link active">Home</a>
+        <a href="/predict" class="btn-cta">Get Started →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">AI Medical Imaging · Powered by VGG16</div>
+        <h1>
+          Deteksi <span class="gradient">Tumor Otak</span> dari Citra MRI dalam Hitungan Detik
+        </h1>
+        <p class="lead">
+          Aplikasi klasifikasi berbasis deep learning yang dilatih dengan ribuan
+          gambar MRI untuk membantu deteksi awal tumor otak dengan akurasi tinggi.
+        </p>
+        <a href="/predict" class="btn-hero">Mulai Analisis →</a>
+        <a href="#features" class="btn-hero-ghost">Pelajari Lebih</a>
+      </div>
+
+      <div class="hero-visual">
+        <div class="brain-card">
+          <div class="brain-icon">🧠</div>
+        </div>
+        <div class="floating-tag tag-1">
+          <span class="dot"></span>
+          <span>95%+ Akurasi</span>
+        </div>
+        <div class="floating-tag tag-2">
+          <span class="dot"></span>
+          <span>VGG16 CNN</span>
+        </div>
+        <div class="floating-tag tag-3">
+          <span class="dot"></span>
+          <span>Real-time</span>
         </div>
       </div>
-    </section>
-  </body>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div>
+          <div class="stat-num">95%+</div>
+          <div class="stat-label">Akurasi Model</div>
+        </div>
+        <div>
+          <div class="stat-num">5,000+</div>
+          <div class="stat-label">MRI Dataset</div>
+        </div>
+        <div>
+          <div class="stat-num">&lt; 3s</div>
+          <div class="stat-label">Waktu Prediksi</div>
+        </div>
+        <div>
+          <div class="stat-num">2</div>
+          <div class="stat-label">Kelas Klasifikasi</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features container" id="features">
+    <div class="features-title">
+      <span class="tag">Fitur Unggulan</span>
+      <h2>Teknologi AI untuk Diagnosa Medis</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Analisis Cepat</h3>
+        <p>Upload gambar MRI dan dapatkan hasil klasifikasi dalam waktu kurang dari 3 detik.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Akurasi Tinggi</h3>
+        <p>Model VGG16 yang sudah di-tuning untuk klasifikasi tumor otak dengan akurasi di atas 95%.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Privasi Terjamin</h3>
+        <p>Gambar yang diupload tidak disimpan permanen dan hanya digunakan untuk proses prediksi.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Responsif</h3>
+        <p>Dapat diakses dari perangkat apapun — desktop, tablet, atau smartphone.</p>
+      </div>
+    </div>
+  </section>
+</body>
 </html>
-<!-- 01141A -->

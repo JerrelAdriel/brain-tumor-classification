@@ -1,73 +1,480 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-  </head>
-  <body>
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top shadow-sm bg-body">
-      <div class="container">
-        <a class="navbar-brand" href="/">
-          <h4>BrainTumor-CNN</h4>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <a class="nav-link" aria-current="page" href="/">Home</a>
-            </li>
-            <li class="nav-item">
-              <a type="button" class="nav-link active getstarted pe-none" href="/predict">Get Started</a>
-            </li>
-          </ul>
-        </div>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BrainTumor-CNN — Classification</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a14;
+      --surface: #14142b;
+      --surface-2: #1c1c3a;
+      --border: #2a2a4a;
+      --accent: #06b6d4;
+      --accent-2: #0ea5e9;
+      --accent-glow: rgba(6,182,212,0.25);
+      --text: #f0f4ff;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 50% 40% at 20% 20%, rgba(6,182,212,0.12), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(14,165,233,0.10), transparent);
+      z-index: -1;
+    }
+
+    /* Navbar */
+    .navbar-modern {
+      background: rgba(10,10,20,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-modern .brand {
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .navbar-modern .brand .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .navbar-modern .nav-link {
+      color: var(--text-muted);
+      margin-left: 24px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .navbar-modern .nav-link:hover { color: var(--text); }
+    .navbar-modern .nav-link.active {
+      color: var(--accent);
+    }
+
+    /* Main */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border: 1px solid rgba(6,182,212,0.3);
+    }
+    .header .badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .header h1 {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header p {
+      color: var(--text-muted);
+      font-size: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Upload Card */
+    .upload-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 50px 30px;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      background: var(--surface-2);
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(6,182,212,0.05);
+      transform: scale(1.01);
+    }
+    .drop-zone .icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 10px 30px var(--accent-glow);
+    }
+    .drop-zone .title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .drop-zone .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .drop-zone .btn-browse {
+      display: inline-block;
+      padding: 10px 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .drop-zone .btn-browse:hover { transform: translateY(-2px); }
+    .drop-zone .formats {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .drop-zone input[type="file"] { display: none; }
+
+    /* File preview */
+    .file-preview {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      align-items: center;
+      gap: 12px;
+    }
+    .file-preview.show { display: flex; }
+    .file-preview .preview-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+    .file-preview .info {
+      flex: 1;
+      min-width: 0;
+    }
+    .file-preview .name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-preview .size {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .file-preview .remove {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .file-preview .remove:hover {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 8px 20px var(--accent-glow);
+    }
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px var(--accent-glow);
+    }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Result */
+    .result-card {
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .result-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .result-img {
+      max-width: 280px;
+      width: 100%;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto 16px;
+      border: 1px solid var(--border);
+    }
+    .result-tag {
+      text-align: center;
+      padding: 12px 24px;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 16px;
+      display: inline-block;
+    }
+    .result-wrap { text-align: center; }
+    .result-tumor {
+      background: rgba(239,68,68,0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.3);
+    }
+    .result-no-tumor {
+      background: rgba(16,185,129,0.15);
+      color: var(--success);
+      border: 1px solid rgba(16,185,129,0.3);
+    }
+    .alert-error {
+      background: rgba(239,68,68,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.3);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    /* Info cards */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .info-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .info-card .num {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .info-card .label {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar-modern">
+    <div class="container d-flex align-items-center justify-content-between">
+      <a class="brand" href="/">
+        <span class="logo">🧠</span>
+        <span>BrainTumor-CNN</span>
+      </a>
+      <div>
+        <a href="/" class="nav-link">Home</a>
+        <a href="/predict" class="nav-link active">Classify</a>
       </div>
-    </nav>
+    </div>
+  </nav>
 
-    <section id="section-upload" class="d-flex align-items-center">
-      <div class="container mt-2 position-relative" >
-        <div class="box-first row mb-4 pt-3 pb-3" >
-          <div class="col" >
-            <div class="container mb-3" style="width:50%; ">
-                <h2 class="pb-3 mb-3">Classification</h2>
-                <form class="mb-5" method="POST" action="/predict" autocomplete="off" enctype="multipart/form-data" >
-                    <div class="container text-center">
-                        <div class="row">
-                            <div class="col">
-                                <label for="imageFile" class="form-label visually-hidden">Input File</label>
-                                <input class="form-control form-control-md" name="imageFile" id="imageFile" type="file" accept="images/*" multiple required/>
-                            </div>
-                            <div class="col-lg-auto">
-                                <button type="submit" id="btnSubmit" class="btn btn-primary">Predict</button>
-                            </div> 
-                        </div>  
-                    </div>
-                </form>
-                <h4 class="text-center">Label = Tumor || No Tumor</h4>
-                <div class="box-second container mb-5">
-                  <h5 class="text-center pt-2 mb-1" >Classification Result</h5>
-                  <div class="box-third text-center pt-2 mb-5" >
-                  {% if message %}  
-                    <p class="mx-2 text-center alert alert-danger" role="alert">{{message}}</p>
-                  {% endif %}
-                  {% if prediction != None %}
-                    {% if filename %}
-                      <img src="{{ url_for('static', filename='img_uploaded/'+filename) }}" alt="error">
-                      <p class="text-center" >{{prediction}}</p>
+  <div class="main">
+    <div class="header">
+      <span class="badge">AI Powered · VGG16 Model</span>
+      <h1>Brain Tumor Classification</h1>
+      <p>Upload gambar MRI dan biarkan AI menganalisis apakah terdapat tumor pada citra otak.</p>
+    </div>
 
-                    {% endif %}
-                  {% endif %}
-                </div>
-                </div>
-            </div>
+    <div class="upload-card">
+      <form id="uploadForm" method="POST" action="/predict" autocomplete="off" enctype="multipart/form-data">
+        <div class="drop-zone" id="dropZone">
+          <div class="icon">🧠</div>
+          <div class="title">Tarik & lepas gambar MRI di sini</div>
+          <div class="subtitle">atau pilih file dari perangkat kamu</div>
+          <label for="imageFile" class="btn-browse">Pilih File</label>
+          <input type="file" name="imageFile" id="imageFile" accept="image/*" required />
+          <div class="formats">Format yang didukung: JPG, JPEG, PNG · Max 10 MB</div>
+        </div>
+
+        <div class="file-preview" id="filePreview">
+          <img class="preview-img" id="previewImg" alt="" />
+          <div class="info">
+            <div class="name" id="fileName"></div>
+            <div class="size" id="fileSize"></div>
           </div>
+          <button type="button" class="remove" id="removeFile" title="Hapus">×</button>
+        </div>
+
+        <button type="submit" id="btnSubmit" class="btn-submit" disabled>
+          🔍 Analisis Sekarang
+        </button>
+      </form>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="num">95%+</div>
+          <div class="label">Akurasi Model</div>
+        </div>
+        <div class="info-card">
+          <div class="num">VGG16</div>
+          <div class="label">Arsitektur CNN</div>
+        </div>
+        <div class="info-card">
+          <div class="num">&lt;3s</div>
+          <div class="label">Waktu Analisis</div>
         </div>
       </div>
-    </section>
-  </body>
+    </div>
+
+    {% if message or prediction %}
+    <div class="result-card">
+      <h3>Hasil Klasifikasi</h3>
+      {% if message %}
+        <div class="alert-error">{{message}}</div>
+      {% endif %}
+      {% if prediction != None and filename %}
+        <img src="{{ url_for('static', filename='img_uploaded/'+filename) }}" class="result-img" alt="MRI" />
+        <div class="result-wrap">
+          <span class="result-tag {% if 'No' in prediction %}result-no-tumor{% else %}result-tumor{% endif %}">
+            {{ prediction }}
+          </span>
+        </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('imageFile');
+    const filePreview = document.getElementById('filePreview');
+    const previewImg = document.getElementById('previewImg');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeBtn = document.getElementById('removeFile');
+    const submitBtn = document.getElementById('btnSubmit');
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+      return (bytes/1024/1024).toFixed(2) + ' MB';
+    }
+
+    function showFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => previewImg.src = e.target.result;
+      reader.readAsDataURL(file);
+      fileName.textContent = file.name;
+      fileSize.textContent = formatSize(file.size);
+      filePreview.classList.add('show');
+      submitBtn.disabled = false;
+    }
+
+    fileInput.addEventListener('change', e => {
+      if (e.target.files[0]) showFile(e.target.files[0]);
+    });
+
+    removeBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      filePreview.classList.remove('show');
+      submitBtn.disabled = true;
+    });
+
+    ['dragover','dragenter'].forEach(ev =>
+      dropZone.addEventListener(ev, e => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      })
+    );
+    ['dragleave','drop'].forEach(ev =>
+      dropZone.addEventListener(ev, e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+      })
+    );
+    dropZone.addEventListener('drop', e => {
+      const f = e.dataTransfer.files[0];
+      if (f) {
+        fileInput.files = e.dataTransfer.files;
+        showFile(f);
+      }
+    });
+  </script>
+</body>
 </html>
